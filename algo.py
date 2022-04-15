@@ -17,30 +17,30 @@ import numpy as np
 #paramètre recherché ainsi que l'indice du type de porte associé et renvoie
 #le string de l'opération e.g. "+", "_min_" etc cf Paramètre
 
-def OperGate(self, IGate, IParam):
-        Param = self.__param[IParam]  # Param c'est le paramètre cherché
+def OperGate(arbre, IGate, IParam):
+        Param = arbre.get__param()  # Param c'est le paramètre cherché
         Oper = Param.GetRuleNo(IGate)  # Oper (str) l'opération associé à la gate d'indice IGate
         return (Oper)
         
-#Traitement : A changer
-#Entrées : Le chemin actuellement suivi(vide au depart), la liste de tous les chemins parcourus (vide au depart)
-#Le Noeud actuellement en cours de traitement, l'expression symbolique du chemin actuellement traité associée
-#Au parametre d'indice Iparam dans la liste de tous les parametres LParam, ainsi que
-#La liste des expressions associée a chaque chemin.
-#Sortie : La liste des chemins tous les chemins possible ainsi que la liste de chaque expression symbolique 
-#Associée a chaque chemin
+#TrouveChemins : 
+#Entrées : Un arbre
+#Sortie : Une liste 
+#Specification : TrouveChemins prend un arbre et renvoie la liste des id de tous les chemins possibles a parcourir,
+#On part du principe qu'il n'y a que des portes AND ou SAND (cf fonctions precedemment utilisées pour split les OR)
 
-
-
-
-def TrouveChemins2a(self, NCourant):
+def TrouveChemins(arbre, IParam, NCourant = Noeud(-1,test,kek,[],[]), ListRet = np.array([])):
+	if (NCourant.getId() == -1):
+	    NCourant = arbre.getRoot() 
         if (NCourant.getGate() == 'None - Leaf'):  # Ncourant est une feuille de l'arbre
-            return [NCourant.getId()]
+            return ([[NCourant.getId()], str(NCourant.getParamValueNo(IParam))])
         else:  # On a donc affaire à une porte
-            if (NCourant.getGate() == 'AND'):
-                return [NCourant.getId(), [self.TrouveChemins2a(child) for child in self.getChildNode(NCourant)]]
-            if (NCourant.getGate() == 'OR'):
-                return [NCourant.getId(), [self.TrouveChemins2a(child) for child in self.getChildNode(NCourant)]]
+	    for child in arbre.getChildNode(NCourant):
+	        if (child == arbre.getChildNode(NCourant)[-1]):
+         	    ListeRet = np.array([arbre.TrouveChemins(arbre,IParam,NCourant = child)]) + np.array([NCourant.getId(), ')'])		    
+         	elif (child == arbre.getChildNode(NCourant)[0]):
+	            ListeRet = np.array([arbre.TrouveChemins(arbre,IParam,NCourant = child)]) + np.array([NCourant.getId(), '(' + OperGate(arbre,0,IParam)])
+		else :
+		    ListeRet = np.array([arbre.TrouveChemins(arbre,IParam,NCourant = child)]) + np.array([NCourant.getId(), OperGate(arbre,0,IParam)])
+            return ListRet
 
-#Il faut changer la porte  OR pour dupliquer les listes n fois où n est le nombre de fils de la porte OR
 
