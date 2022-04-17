@@ -1,61 +1,202 @@
 {
   "Parameters": [
-    "Time"
+    "Time",
+    "Money",
+    "Success probability"
   ],
   "Compute rules": {
     "AND": [
-      "+"
+      "+",
+      "+",
+      "*"
     ],
     "OR": [
+      "M",
+      "+",
       "+"
     ],
     "NOT": [
-      "+"
+      "m",
+      "m",
+      "m"
     ],
     "XOR": [
-      "+"
+      "M",
+      "M",
+      "M"
     ],
     "SOR": [
+      "M",
+      "+",
       "+"
     ]
   },
   "Optimization rules": [
-    "m"
+    "m",
+    "m",
+    "M"
   ],
   "Nodes": [
     {
       "ID": 1,
-      "Name": "node1",
+      "Name": "compromise_IoT_device",
       "Parents": [],
       "Children": [
         2,
-        3
+        3,
+        4
       ],
       "Gate": "AND",
       "Values": []
     },
     {
       "ID": 2,
-      "Name": "node2",
+      "Name": "access_home_network",
       "Parents": [
         1
       ],
-      "Children": [],
-      "Gate": "",
-      "Values": [
-        3.5
-      ]
+      "Children": [
+        5,
+        6
+      ],
+      "Gate": "AND",
+      "Values": []
     },
     {
       "ID": 3,
-      "Name": "node3",
+      "Name": "exploit_software_vulnerability_in_IoT_device",
       "Parents": [
         1
       ],
       "Children": [],
       "Gate": "",
       "Values": [
+        1,
+        60,
+        10.5
+      ]
+    },
+    {
+      "ID": 4,
+      "Name": "run_malicious_script",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        0.5,
+        50,
+        11.25
+      ]
+    },
+    {
+      "ID": 5,
+      "Name": "get_credentials",
+      "Parents": [
+        2
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        10,
+        40,
+        5
+      ]
+    },
+    {
+      "ID": 6,
+      "Name": "gain_access_home_to_private_networks",
+      "Parents": [
+        2
+      ],
+      "Children": [
+        7,
+        8
+      ],
+      "Gate": "OR",
+      "Values": []
+    },
+    {
+      "ID": 7,
+      "Name": "access_LAN",
+      "Parents": [
+        6
+      ],
+      "Children": [
+        9,
+        10
+      ],
+      "Gate": "AND",
+      "Values": []
+    },
+    {
+      "ID": 8,
+      "Name": "access_WLAN",
+      "Parents": [
+        6
+      ],
+      "Children": [
+        11,
+        12
+      ],
+      "Gate": "AND",
+      "Values": []
+    },
+    {
+      "ID": 9,
+      "Name": "find_LAN_access_port",
+      "Parents": [
+        7
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        1,
+        20,
         "X"
+      ]
+    },
+    {
+      "ID": 10,
+      "Name": "spoof_MAC_address",
+      "Parents": [
+        7
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        0.5,
+        30,
+        "Y"
+      ]
+    },
+    {
+      "ID": 11,
+      "Name": "find_WLAN",
+      "Parents": [
+        8
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        5,
+        2,
+        2.5
+      ]
+    },
+    {
+      "ID": 12,
+      "Name": "break_WPA_keys",
+      "Parents": [
+        8
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        2,
+        80,
+        1
       ]
     }
   ]
