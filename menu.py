@@ -33,7 +33,7 @@ class Menu:
         - 1 sinon
     """
     def action_parameter(self):
-        print("\n*")
+        print("\n*\n")
 
         pro = self.tree.get_pro()
         # Paramètres de l'arbre
@@ -41,7 +41,7 @@ class Menu:
 
         # 3 actions possibles : ajout, suppression et modification d'un paramètre
 
-        print("\nParameter")
+        print("Parameter")
         print("  Adding: type A or a")
         print("  Deleting: type D or d")
         print("  Modifying: type M or m\n")
@@ -152,7 +152,7 @@ class Menu:
 
                 new_opt = pro.input_modify_optimization(mod_par)
                 pro.modify_parameter_tree(mod_par, mod_opt=new_opt)
-        # Erreur saisie (rien ne se passe)
+        # Toute autre saisie
         else:
             return 1
 
@@ -165,7 +165,7 @@ class Menu:
     Entrée : aucune
     Sortie : entier
     
-    Ajout d'un noeud à l'arbre
+    Ajout ou suppression d'un noeud à l'arbre
     Renvoie :
         - 0 ssi tout s'est bien déroulé
         - 1 sinon
@@ -173,21 +173,47 @@ class Menu:
     def action_node(self):
         print("\n*\n")
 
-        print("Add a node")
-        print("  Specify the name")
-        print("          the parent(s)")
-        print("          the child(ren)\n")
+        # 2 actions possibles : ajout et suppression d'un noeud
 
-        node_error = Node()
+        print("Node")
+        print("  Adding: type A or a")
+        print("  Deleting: type D or d\n")
 
-        node = self.tree.input_add_node()
+        # Saisie du choix de l'utilisateur
+        action = input("Action : ")
 
-        # Erreur saisie
-        if (node == node_error):
+        # Choix : ajout d'un noeud à l'arbre
+        if action == "A" or action == "a":
+            print("\nAdd a node")
+            print("  Specify the name")
+            print("          the parent(s)")
+            print("          the child(ren)\n")
+
+            node_error = Node()
+
+            node = self.tree.input_add_node()
+
+            # Erreur saisie
+            if (node == node_error):
+                return 1
+
+            # Ajout du noeud
+            self.tree.add_node_tree(node)
+        # Choix : suppression d'un noeud de l'arbre
+        elif action == "D" or action == "d":
+            print("\nDelete a node")
+            print("  Two deletion modes")
+            print("    Removal of the node only")
+            print("               the node and the generated sub-tree\n")
+
+            ret = self.tree.input_delete_node()
+
+            # Erreur saisie
+            if ret == 1:
+                return 1
+        # Toute autre saisie
+        else:
             return 1
-
-        # Ajout du noeud
-        self.tree.add_node_tree(node)
 
         return 0
 
@@ -195,7 +221,7 @@ class Menu:
     Entrée : aucune
     Sortie : entier
     
-    Exécution d'une action sur un paramètre ou un noeud
+    Exécution d'une action sur un paramètre ou un noeud de l'arbre
     Renvoie :
         - 0 ssi tout s'est bien déroulé
         - 1 ssi il y a une erreur
@@ -228,7 +254,7 @@ class Menu:
         # L'utilisateur quitte le menu
         elif choice == "Q" or choice == "q":
             return 2
-        # N'importe quelle autre saisie : rien ne se passe
+        # Toute autre saisie
         else:
             return 3
 
