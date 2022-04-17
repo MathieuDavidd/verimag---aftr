@@ -162,7 +162,7 @@ class Tree:
         - root (booléen, par défaut False) : indique si le noeud node est une nouvelle racine ou non
     Sortie : aucune
     
-    Ajoute le noeud node à l'arbre
+    Ajoute le noeud node à la liste de noeuds de l'arbre
     """
     def add_node(self, node, root=False):
         # Le noeud node n'est pas une nouvelle racine : ajout en fin de liste
@@ -171,6 +171,27 @@ class Tree:
         # Le noeud node est une nouvelle racine : insertion en début de liste
         else:
             self.nodes.insert(0, node)
+
+    """
+    Entrée :
+        node (objet Node) : noeud
+    Sortie : aucune
+    
+    Supprime le noeud node de la liste des noeuds de l'arbre
+    """
+    def delete_node(self, node):
+        self.nodes.remove(node)
+
+    """
+    Entrée :
+        nodes (liste d'objets Node) : liste de noeuds
+    Sortie : aucune
+    
+    Supprime l'ensemble des noeuds nodes la liste des noeuds de l'arbre
+    """
+    def delete_nodes(self, nodes):
+        for node in nodes:
+            self.delete_node(node)
 
     """
     Entrée : aucune
@@ -208,10 +229,29 @@ class Tree:
         return len(self.nodes)
 
     """
+    Entrée :
+        node_children (liste d'objets Node) : liste de fils d'un noeud
+    Sortie : liste d'objets Node
+    
+    Parcourt les fils noeud courant en largeur et renvoie ses petits-fils
+    """
+    def breadth_traversal(self, node_children):
+        # Liste des petits-fils du noeud courant
+        node_grand_children = []
+
+        # Parcours des fils du noeud courant
+        for node_child in node_children:
+            # Petit-fils du noeud courant
+            node_children_child = self.get_node_children(node_child)
+            node_grand_children.extend(node_children_child)
+
+        return node_grand_children
+
+    """
     Entrée : aucune
     Sortie : aucune
     
-    Tri la liste de noeuds de l'arbre de sorte que l'on puisse le parcourir en largeur
+    Trie la liste de noeuds de l'arbre de sorte que l'on puisse le parcourir en largeur
     
     Exemple :
         On a la liste de noeuds [noeud1, noeud2, noeud3, noeud4], où noeud3 est la racine de l'arbre
@@ -234,27 +274,45 @@ class Tree:
 
         # À partir des fils de la racine, on remplit la liste sort_nodes
         while len(sort_nodes) != nmb_nodes:
-            # Liste des petits-fils du noeud courant
-            next_node_children = []
+            # Petits-fils du noeud courant
+            node_grand_children = self.breadth_traversal(node_children)
 
-            # Parcours des fils du noeud courant
-            for node_child in node_children:
-                # Ajout du fils node_child à la liste triée
-                sort_nodes.append(node_child)
-
-                # Fils du noeud node_child : petit-fils du noeud courant
-                node_children_child = self.get_node_children(node_child)
-                # Ajout des petits-fils à la liste next_node_children
-                next_node_children.extend(node_children_child)
-
-            # Descente de l'arbre
-            node_children = next_node_children
+            # Tri des noeuds
+            sort_nodes.extend(node_children)
+            # Descente dans l'arbre
+            node_children = node_grand_children
 
         self.set_nodes(sort_nodes)
 
     """
     Entrée :
-        leaves_values (liste de réels flottants) : liste des valeurs des feuilles de l'arbre
+        node (objet Node) : noeud
+    Sortie : liste d'objets Node
+    
+    Renvoie l'ensemble des noeuds du sous-arbre engendré par le noeud node
+    """
+    def sub_tree_from_node(self, node):
+        # Sous-arbre
+        nodes_sub_tree = []
+
+        # Le noeud node est dans le sous-arbre renvoyé
+        nodes_sub_tree.append(node)
+
+        # Fils du noeud node
+        node_children = self.get_node_children(node)
+
+        while node_children != []:
+            node_grand_children = self.breadth_traversal(node_children)
+
+            nodes_sub_tree.extend(node_children)
+            node_children = node_grand_children
+
+        return nodes_sub_tree
+
+    """
+    Entrée :
+        leaves_values (liste de réels flottants, d'entiers et/ou de chaine de caractères) :
+        liste des valeurs des feuilles de l'arbre
     Sortie : aucune
     
     Ajoute aux feuilles de l'arbre les valeurs contenues dans la liste leaves_values
@@ -422,20 +480,116 @@ class Tree:
         - 3 : le noeud node a au moins un parent et au moins un fils : insertion du noeud
     """
     def add_node_tree(self, node):
-        # Parents du noeud node
-        node_parents = self.get_node_parents(node)
-        # Fils du noeud node
-        node_children = self.get_node_children(node)
-
         # Cas 1
-        if node_parents == []:
+        if node.is_root():
             self.add_root(node)
         # Cas 2
-        elif node_children == []:
+        elif node.is_leaf():
             self.add_leaf(node)
         # Cas 3
         else:
             self.insert_node(node)
+
+    """
+    Entrée :
+        node (objet Node) : noeud
+    Sortie : aucune
+    
+    Supprime les parents du noeud node
+    """
+    def delete_node_parents(self, node):
+        id = node.get_id()
+        node_parents = self.get_node_parents(node)
+
+        for node_parent in node_parents:
+            id_node_parent = node_parent.get_id()
+
+            # node_parent est un parent de node : on le supprime
+            node.delete_parent(id_node_parent)
+            # Réciproquement, node est un fils de node_parent : on le supprime
+            node_parent.delete_child(id)
+
+            self.set_node(node)
+            self.set_node(node_parent)
+
+    """
+    Entrée :
+        node (objet Node) : noeud
+    Sortie : aucune
+    
+    Supprime les fils du noeud node
+    """
+    def delete_node_children(self, node):
+        id = node.get_id()
+        node_children = self.get_node_children(node)
+
+        for node_child in node_children:
+            id_node_child = node_child.get_id()
+
+            # node_child est un fils de node : on le supprime
+            node.delete_child(id_node_child)
+            # Réciproquement, node est un parent de node_child : on le supprime
+            node_child.delete_parent(id)
+
+            self.set_node(node)
+            self.set_node(node_child)
+
+    """
+    Entrée :
+        node (objet Node) : noeud
+    Sortie : aucune
+    
+    Supprime le noeud node de l'arbre
+    """
+    def delete_node_tree(self, node):
+        node_parents = self.get_node_parents(node)
+        node_children = self.get_node_children(node)
+
+        # Suppression des parents du noeud node
+        self.delete_node_parents(node)
+        # Suppression des fils du noeud node
+        self.delete_node_children(node)
+
+        # On ajoute les fils du noeud node à ses parents
+        for node_parent in node_parents:
+            id_node_parent = node_parent.get_id()
+
+            for node_child in node_children:
+                id_node_child = node_child.get_id()
+
+                node_child.add_parent(id_node_parent)
+                node_parent.add_child(id_node_child)
+
+        # Suppression du noeud node
+        self.delete_node(node)
+
+        self.sort_nodes_root_leaves()
+
+    """
+    Entrée :
+        node (objet Node) : noeud
+    Sortie : liste d'objets Node
+    
+    Suprrime le noeud node et le sous-arbre engendré
+    Renvoie la liste des parents du noeud node
+    """
+    def delete_sub_tree_from_node(self, node):
+        # Parents du noeud node
+        node_parents = self.get_node_parents(node)
+
+        # Sous-arbre engendré par le noeud node
+        sub_tree = self.sub_tree_from_node(node)
+
+        # Suppression des liens de parenté entre chaque noeud du sous-arbre
+        for node_sub_tree in sub_tree:
+            self.delete_node_parents(node_sub_tree)
+
+        # Suppression du sous-arbre
+        self.delete_nodes(sub_tree)
+
+        self.sort_nodes_root_leaves()
+
+        return node_parents
 
     """
     Entrée : aucune
@@ -466,6 +620,11 @@ class Tree:
             while add_value == "\0":
                 print("\nError input: enter a real number or an alphanumeric string")
                 add_value = generic_type_input("Added value: ")
+
+            if type(add_value) != str:
+                # On privilégiera une valeur entière dans la mesure du possibe
+                if add_value - int(add_value) == 0.0:
+                    add_value = int(add_value)
 
             leaves_values.append((leaf, add_value))
 
@@ -539,8 +698,6 @@ class Tree:
             print("\nError input: enter an integer")
             nmb_parents = generic_type_input("Number of parents: ", int)
 
-        # nmb_parents = int(input("Number of parents: "))
-
         # Erreur si le nombre de parents saisi est trop élevé
         if nmb_parents > nmb_nodes:
             print("\nToo much parents")
@@ -565,8 +722,6 @@ class Tree:
                 while parent == "\0":
                     print("\nError input: enter an integer")
                     parent = generic_type_input("ID.: ", int)
-
-                # parent = int(input("ID.: "))
 
                 # L'utilisateur doit saisir un nouvel identifiant d'un parent si il n'existe pas dans l'arbre
                 if not (self.node_exists(parent)):
@@ -603,8 +758,6 @@ class Tree:
         while nmb_children == "\0":
             print("\nError input: enter an integer")
             nmb_children = generic_type_input("Number of children: ", int)
-
-        # nmb_children = int(input("Number of children: "))
 
         # Erreur si le nombre de fils saisi est trop élevé
         if nmb_children > nmb_nodes:
@@ -685,6 +838,61 @@ class Tree:
         node = Node(id, name, parents, children, gate, values)
 
         return node
+
+    """
+    Entrée : aucune
+    Sortie : entier
+    
+    Saisie pour la suppression d'un noeud
+    """
+    def input_delete_node(self):
+        print("*\n")
+
+        # Saisie de l'identifiant de l'arbre
+        id = generic_type_input("ID.: ", int)
+
+        # L'utilisateur doit ressaisir un identifiant tant il n'est pas entier
+        while id == "\0":
+            print("\nError input: enter an integer")
+            id = generic_type_input("ID: ", int)
+
+        # Erreur si le noeud d'identifiant id n'existe pas
+        if not (self.node_exists(id)):
+            print("\nThe node", id, "does not exist")
+            time.sleep(2)
+
+            return 1
+
+        # Noeud à supprimer
+        del_node = self.get_node(id)
+
+        print("\n*\n")
+
+        print("Delete the sub-tree from this node?")
+        # L'utilisateur peut soit supprimer le noeud uniquement, soit en plus le sous-arbre engendré
+        del_choice = input("Type Y or y: ")
+
+        # Suppression du noeud et du sous-arbre engendré
+        if del_choice == "Y" or del_choice == "y":
+            # Parents du noeud supprimé
+            del_node_parents = self.delete_sub_tree_from_node(del_node)
+
+            for del_node_parent in del_node_parents:
+                # Si un parent du noeud supprimé est une feuille, on lui ajoute des valeurs pour chaque paramètre
+                if del_node_parent.is_leaf():
+                    id_del_node_parent = del_node_parent.get_id()
+
+                    print("\nNode", id_del_node_parent, end="\n\n")
+
+                    del_node_parent.set_gate("")
+
+                    add_leaves_values = self.input_values()
+                    self.add_leaves_values(add_leaves_values)
+        # Suppression du noeud uniquement
+        else:
+            self.delete_node_tree(del_node)
+
+        return 0
 
     """
     Entrée : aucune
