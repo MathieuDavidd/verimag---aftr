@@ -1,0 +1,62 @@
+{
+  "Parameters": [
+    "Time"
+  ],
+  "Compute rules": {
+    "AND": [
+      "+"
+    ],
+    "OR": [
+      "+"
+    ],
+    "NOT": [
+      "+"
+    ],
+    "XOR": [
+      "+"
+    ],
+    "SOR": [
+      "+"
+    ]
+  },
+  "Optimization rules": [
+    "m"
+  ],
+  "Nodes": [
+    {
+      "ID": 1,
+      "Name": "node1",
+      "Parents": [],
+      "Children": [
+        2,
+        3
+      ],
+      "Gate": "AND",
+      "Values": []
+    },
+    {
+      "ID": 2,
+      "Name": "node2",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        2
+      ]
+    },
+    {
+      "ID": 3,
+      "Name": "node3",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        "3*x"
+      ]
+    }
+  ]
+}
