@@ -8,6 +8,7 @@ d'optimisation
 """
 
 
+import copy
 import time
 import json
 from functions import clear, generic_type_input
@@ -218,6 +219,16 @@ class Tree:
                 leaves.append(node)
 
         return leaves
+
+    """
+    Entrée : aucune
+    Sortie : objet Tree
+    
+    Copie profonde de l'objet courant
+    """
+    def deepcopy(self):
+        t = copy.deepcopy(self)
+        return t
 
     """
     Entrée : aucune
