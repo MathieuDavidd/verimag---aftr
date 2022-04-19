@@ -4,6 +4,8 @@ Fichier aux.py
 Fonctions auxiliaires
 """
 
+# blablabla
+
 import os
 
 """
