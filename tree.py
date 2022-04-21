@@ -762,7 +762,7 @@ class Tree:
                         name_node_parent = node_parent.get_name()
 
                         print("\nImpossible adding to the node ", parent, " (", name_node_parent, ")", sep="")
-                        print("Logical gate NOT takes only one entry\n")
+                        print("Logical gate NOT takes only one entry")
                     # Ajout possible
                     else:
                         parents.append(parent)
@@ -872,6 +872,21 @@ class Tree:
                 print("\nError input: the gate '", gate, "' is not valid", sep="")
                 gate = input("Logical gate: ")
 
+            # Erreur si le noeud est muni d'une porte logique et a au moins deux fils
+            if gate == "NOT":
+                if nmb_children >= 2:
+                    print("\nImpossible adding of this node")
+                    print("Logical gate NOT takes only one entry")
+
+                    return node_error
+            # Erreur si le noeud est muni d'une porte logique AND, OR, XOR ou SOR et a exactement un fils
+            else:
+                if nmb_children == 1:
+                    print("\nImpossible adding of this node")
+                    print("Logical gate", gate, "takes at least two entries")
+
+                    return node_error
+
             # Pas de valeurs
             values = []
 
@@ -928,7 +943,7 @@ class Tree:
                 name_del_node = del_node.get_name()
 
                 print("\nImpossible deleting of the node ", id, " (", name_del_node, ")", sep="")
-                print("A logical parent's gate takes at least two entries\n")
+                print("A logical parent's gate takes at least two entries")
 
                 time.sleep(5)
 
