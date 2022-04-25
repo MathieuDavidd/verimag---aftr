@@ -9,16 +9,7 @@ des scénarios
 
 
 import sys
-
-
-# Portes logiques
-gates = ["AND", "OR", "NOT", "XOR", "SOR"]
-
-# Paramètres et règles de calcul et d'optimisation valides
-
-valid_parameters = ["Time", "Money", "Damages", "Success probability"]
-valid_rules = ["+", "*", "M", "m"]
-valid_optimizations = ["M", "m"]
+from functions import rule_is_valid, optimization_is_valid
 
 
 class Parameters:
@@ -37,7 +28,7 @@ class Parameters:
     """
     def __init__(self):
         self.parameters = []
-        self.rules = {"AND": [], "OR": [], "NOT": [], "XOR": [], "SOR": []}
+        self.rules = {"AND": [], "OR": [], "k/n": []}  # , "NOT": [], "XOR": [], "SOR": []}
         self.optimizations = []
 
     """
@@ -181,36 +172,6 @@ class Parameters:
     """
     def parameter_exists(self, parameter):
         return (parameter in self.parameters)
-
-    """
-    Entrée :
-        parameter (chaine de caractères) : nom d'un paramètre
-    Sortie : booléen
-    
-    Renvoie vrai ssi si le paramètre parameter est valide (méthode utile pour la saisie utilisateur)
-    """
-    def parameter_is_valid(self, parameter):
-        return (parameter in valid_parameters)
-
-    """
-    Entrée :
-        rule (chaine de caractères) : règle de calcul
-    Sortie : booléen
-    
-    Renvoie vrai ssi si la règle de calcul rule est valide (méthode utile pour la saisie utilisateur)
-    """
-    def rule_is_valid(self, rule):
-        return (rule in valid_rules)
-
-    """
-    Entrée :
-        optimization (chaine de caractères) : règle d'opitmisation
-    Sortie : booléen
-    
-    Renvoie vrai ssi si la règle d'optimisation optimization est valide (méthode utile pour la saisie utilisateur)
-    """
-    def optimization_is_valid(self, optimization):
-        return (optimization in valid_optimizations)
 
     """
     Entrée :
@@ -367,12 +328,12 @@ class Parameters:
     
     Saisie et renvoi d'une règle de calcul associée à un paramètre
     """
-    def input_rule_paramater(self):
+    def input_rule_paramater(self, gate):
         # Saisie d'une règle de calcul
         rule = input("Choice: ")
 
         # L'utilisateur doit ressasir une règle de calcul tant qu'elle n'est pas valide
-        while not (self.rule_is_valid(rule)):
+        while not (rule_is_valid(gate, rule)):
             print("\nError input: '", rule, "' is not a valid rule", sep="")
             rule = input("Choice: ")
 
@@ -389,7 +350,7 @@ class Parameters:
         optimization = input("Choice: ")
 
         # L'utilisateur doit ressaisir une règle d'optimisation tant qu'elle n'est pas valide
-        while not (self.optimization_is_valid(optimization)):
+        while not (optimization_is_valid(optimization)):
             print("\nError input: '", optimization, "' is not a valid rule", sep="")
             optimization = input("Choice: ")
 
@@ -403,18 +364,23 @@ class Parameters:
     Saisie des règles de calcul associées à la porte logique gate pour tous les paramètres de l'arbre
     """
     def input_rule_gate(self, gate):
-        print("Gate", gate, end="\n\n")
+        print("Gate", gate)
+
+        if gate == "OR":
+            print("Valid rules: maximum and minimum\n")
+        else:
+            print("Valid rules: sum and product\n")
 
         for parameter in self.parameters:
             print("Parameter:", parameter)
 
             # Saisie de la règle de calcul pour le paramètre parameter
-            rule = self.input_rule_paramater()
+            rule = self.input_rule_paramater(gate)
             self.add_rule_gate(gate, rule)
 
             print()
 
-        if gate != "SOR":
+        if gate != "k/n":
             print("-------\n")
 
     """
@@ -428,12 +394,8 @@ class Parameters:
         self.input_rule_gate("AND")
         # Porte logique OR
         self.input_rule_gate("OR")
-        # Porte logique NOT
-        self.input_rule_gate("NOT")
-        # Porte logique XOR
-        self.input_rule_gate("XOR")
-        # Porte logique SOR
-        self.input_rule_gate("SOR")
+        # Porte logique k/n
+        self.input_rule_gate("k/n")
 
     """
     Entrée : aucune
@@ -442,6 +404,8 @@ class Parameters:
     Saisie des règles d'optimisation pour tous les paramètres de l'arbre
     """
     def input_optimization(self):
+        print("Valid rules: maximum and minimum\n")
+
         for parameter in self.parameters:
             print("Parameter:", parameter)
 
@@ -468,12 +432,17 @@ class Parameters:
         for gate in gates:
             print("Gate", gate)
 
+            if gate == "OR":
+                print("Valid rules: maximum and minimum\n")
+            else:
+                print("Valid rules: sum and product\n")
+
             # Saisie de la règle de calcul associée à la porte logique gate pour le paramètre à ajouter
-            rule = self.input_rule_paramater()
+            rule = self.input_rule_paramater(gate)
             # Nouvelle clé : nouvelle valeur
             rules[gate] = rule
 
-            if gate != "SOR":
+            if gate != "k/n":
                 print("\n---------\n")
 
         print("\n*\n")
@@ -481,6 +450,7 @@ class Parameters:
         # Règle d'optimisation
 
         print("Optimization rule")
+        print("Valid rules: maximum and minimum\n")
 
         # Saisie de la règle d'optimisation pour le paramètre à ajouter
         optimization = self.input_optimization_paramater()
@@ -514,15 +484,12 @@ class Parameters:
 
             # Modification de la règle de calcul
             if choice == "Y" or choice == "y":
-                print()
+                if gate == "OR":
+                    print("\nValid rules: maximum and minimum\n")
+                else:
+                    print("\nValid rules: sum and product\n")
 
-                # Saisie d'une nouvelle règle de calcul
-                new_rule = input("New compute rule: ")
-
-                # L'utilisateur doit ressaisir une règle de calcul tant qu'elle n'est pas valide
-                while not (self.rule_is_valid(new_rule)):
-                    print("\nError input: '", new_rule, "' is not a valid rule", sep="")
-                    new_rule = input("New compute rule: ")
+                new_rule = self.input_rule_paramater(gate)
 
                 # Nouvelle clé : nouvelle valeur
                 new_rules[gate] = new_rule
@@ -551,14 +518,10 @@ class Parameters:
 
         # Modification de la règle d'optimisation
         if choice == "Y" or choice == "y":
-            print()
+            print("\nValid rules: maximum and minimum\n")
 
             # Saisie d'une nouvelle règle d'optimisation
-            new_opt = input("New optimization rule: ")
-
-            # Renvoi d'une chaine de caractères vide si l'utilisateur saisit une règle d'optimisation invalide
-            if not (self.optimization_is_valid(new_opt)):
-                return ""
+            new_opt = self.input_optimization_paramater()
 
         return new_opt
 
@@ -581,9 +544,9 @@ class Parameters:
 
         print("*********************************\n")
 
-        # Choix parmi 4 paramètres : 1 au minimum, 4 au maximum
+        # Paramètres de l'arbre
 
-        for i in range(4):
+        for i in range(5):
             # Choix 1 : temps
             if i == 0:
                 par_choice = input("Time: ")
@@ -592,18 +555,35 @@ class Parameters:
             elif i == 1:
                 par_choice = input("Money: ")
                 parameter = "Money"
-            # Choix : dommages sur l'infrastructure
+            # Choix 3 : dommages sur l'infrastructure
             elif i == 2:
                 par_choice = input("Damages: ")
                 parameter = "Damages"
-            # Choix : probabilité de réussite du scénario
-            else:
+            # Choix 4 : probabilité de réussite du scénario
+            elif i == 3:
                 par_choice = input("Success probability: ")
                 parameter = "Success probability"
+            # Choix 5 : paramètre(s) personnalisé(s)
+            else:
+                par_choice = input("Custom parameters: ")
 
             # Ajout d'un paramètre sélectionné
             if par_choice == "Y" or par_choice == "y":
-                self.add_parameter(parameter)
+                # Paramètre(s) personnalisé(s)
+                if i == 4:
+                    # L'utilisateur peut ajouter autant de paramètres personnalisés qu'il souhaite
+
+                    print("\nEnter all the names of custom parameters")
+                    print("Type Q or q to end the adding\n")
+
+                    custom_parameter = input("")
+
+                    while custom_parameter != "Q" and custom_parameter != "q":
+                        self.add_parameter(custom_parameter)
+                        custom_parameter = input("")
+                # Tout autre paramètre
+                else:
+                    self.add_parameter(parameter)
 
         # Erreur si au aucun paramètre n'a été sélectionné
         if len(self.parameters) == 0:
@@ -650,7 +630,10 @@ class Parameters:
     """
     def print_parameters(self):
         for parameter in self.parameters:
-            print(parameter, end=" ")
+            print(parameter, end="")
+
+            if parameter != self.parameters[-1]:
+                print("; ", end="")
 
     """
     Entrée :
@@ -660,6 +643,10 @@ class Parameters:
     Affichage des règles de calcul associées à la porte logique gate pour tous les paramètres de l'arbre
     """
     def print_rules(self, gate):
+        # Cas particulier pour la porte logique k parmi n
+        if "/" in gate:
+            gate = "k/n"
+
         for i in range(len(self.parameters)):
             parameter = self.get_parameter(i)
             print("    ", parameter, ": ", end="", sep="")
