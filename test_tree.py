@@ -4,11 +4,13 @@ Fichier test_init_tree.py
 Test de l'ensemble des méthodes de la classe Tree et de ses dépendances
 """
 
+
 import sys
 import os.path
 from functions import clear
 from tree import Tree
 from menu import Menu
+
 
 clear()
 
