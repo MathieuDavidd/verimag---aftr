@@ -1146,17 +1146,19 @@ class Tree:
     """
     def find_path(self, node):
         id = node.get_id()
-
+        appel = False
         if node.is_leaf():
-            return id
+            return [id]
         else:
             gate = node.get_gate()
             node_children = self.get_node_children(node)
 
             if gate == "AND":
                 return [id, [self.find_path(node_child) for node_child in node_children]]
+
             else:
                 return [id] + [self.find_path(node_child) for node_child in node_children]
+
 
     """
     
