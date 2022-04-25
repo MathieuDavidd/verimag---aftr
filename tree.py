@@ -11,9 +11,9 @@ d'optimisation
 import copy
 import time
 import json
-from functions import clear, generic_type_input
+from functions import clear, generic_type_input, gate_is_valid, set_gate_comb
 from node import Node
-from parameters import Parameters, gates
+from parameters import Parameters
 
 
 class Tree:
@@ -246,7 +246,7 @@ class Tree:
     
     Parcourt les fils noeud courant en largeur et renvoie ses petits-fils
     """
-    def breadth_traversal(self, node_children):
+    def breadth_path(self, node_children):
         # Liste des petits-fils du noeud courant
         node_grand_children = []
 
@@ -286,7 +286,7 @@ class Tree:
         # À partir des fils de la racine, on remplit la liste sort_nodes
         while len(sort_nodes) != nmb_nodes:
             # Petits-fils du noeud courant
-            node_grand_children = self.breadth_traversal(node_children)
+            node_grand_children = self.breadth_path(node_children)
 
             # Tri des noeuds
             sort_nodes.extend(node_children)
@@ -313,7 +313,7 @@ class Tree:
         node_children = self.get_node_children(node)
 
         while node_children != []:
-            node_grand_children = self.breadth_traversal(node_children)
+            node_grand_children = self.breadth_path(node_children)
 
             nodes_sub_tree.extend(node_children)
             node_children = node_grand_children
@@ -359,6 +359,22 @@ class Tree:
             id_node = node.get_id()
 
             if id_node == id:
+                return True
+
+        return False
+
+    """
+    Entrée :
+        name (chaine de caractères) : nom d'un noeud
+    Sortie : booléen
+    
+    Renvoie vrai ssi le nom name est attribué à un noeud de l'arbre
+    """
+    def name_node_exists(self, name):
+        for node in self.nodes:
+            name_node = node.get_name()
+
+            if name_node == name:
                 return True
 
         return False
@@ -423,6 +439,12 @@ class Tree:
             if node_parent.is_leaf():
                 # Dans ce cas, on supprime toutes ses valeurs
                 node_parent.clear_values()
+            else:
+                parent_gate = node_parent.get_gate()
+
+                if "/" in parent_gate:
+                    gate = set_gate_comb(parent_gate, 1)
+                    node_parent.set_gate(gate)
 
             node_parent.add_child(id)
             self.set_node(node_parent)
@@ -548,9 +570,10 @@ class Tree:
     """
     Entrée :
         node (objet Node) : noeud
-    Sortie : aucune
+    Sortie : liste d'objets Node
     
     Supprime le noeud node de l'arbre
+    Renvoie la liste des parents du noeud node
     """
     def delete_node_tree(self, node):
         node_parents = self.get_node_parents(node)
@@ -563,6 +586,16 @@ class Tree:
 
         # On ajoute les fils du noeud node à ses parents
         for node_parent in node_parents:
+            parent_gate = node_parent.get_gate()
+
+            if "/" in parent_gate:
+                nmb_children = len(node_children)
+
+                gate = set_gate_comb(parent_gate, nmb_children-1)
+                node_parent.set_gate(gate)
+
+                self.set_node(node_parent)
+
             id_node_parent = node_parent.get_id()
 
             for node_child in node_children:
@@ -571,10 +604,18 @@ class Tree:
                 node_child.add_parent(id_node_parent)
                 node_parent.add_child(id_node_child)
 
+                self.set_node(node_child)
+                self.set_node(node_parent)
+
+            ind_parent = node_parents.index(node_parent)
+            node_parents[ind_parent] = node_parent
+
         # Suppression du noeud node
         self.delete_node(node)
 
         self.sort_nodes_root_leaves()
+
+        return node_parents
 
     """
     Entrée :
@@ -587,6 +628,16 @@ class Tree:
     def delete_sub_tree_from_node(self, node):
         # Parents du noeud node
         node_parents = self.get_node_parents(node)
+
+        for node_parent in node_parents:
+            parent_gate = node_parent.get_gate()
+
+            if "/" in parent_gate:
+                gate = set_gate_comb(parent_gate, -1)
+
+                node_parent.set_gate(gate)
+
+                self.set_node(node_parent)
 
         # Sous-arbre engendré par le noeud node
         sub_tree = self.sub_tree_from_node(node)
@@ -706,6 +757,10 @@ class Tree:
         # Saisie du nom
         name = input("Name: ")
 
+        while self.name_node_exists(name):
+            print("\nThe name '", name, "' is already assigned to a node of the tree", sep="")
+            name = input("Name: ")
+
         print("\n*\n")
 
         # Saisie du nombre de parents
@@ -754,36 +809,28 @@ class Tree:
                     # Parent du noeud à ajouter
                     node_parent = self.get_node(parent)
 
-                    # Porte logique du parent
-                    gate_node_parent = node_parent.get_gate()
+                    parents.append(parent)
+                    add_parent += 1
 
-                    # Erreur si le parent est muni d'une porte logique NOT
-                    if gate_node_parent == "NOT":
-                        name_node_parent = node_parent.get_name()
+                    # Cas particulier : le parent était au préalable une feuille
+                    if (node_parent.is_leaf()):
+                        children_parent = node_parent.get_children()
+                        nmb_children_parent = len(children_parent)
 
-                        print("\nImpossible adding to the node ", parent, " (", name_node_parent, ")", sep="")
-                        print("Logical gate NOT takes only one entry")
-                    # Ajout possible
-                    else:
-                        parents.append(parent)
-                        add_parent += 1
+                        # On lui ajoute une porte logique
+                        gate_parent = input("Parent's gate: ")
 
-                        # Cas particulier : le parent était au préalable une feuille
-                        if (node_parent.is_leaf()):
-                            # On lui ajoute une porte logique
+                        # L'utilisateur doit ressaisir une porte logique tant qu'elle n'est pas valide
+                        while not (gate_is_valid(gate_parent, nmb_children_parent)):
+                            print("\nError input: the gate '", gate_parent, "' is not valid", sep="")
                             gate_parent = input("Parent's gate: ")
 
-                            # L'utilisateur doit ressaisir une porte logique tant qu'elle n'est pas valide
-                            while gate_parent not in gates:
-                                print("\nError input: the gate '", gate_parent, "' is not valid", sep="")
-                                gate_parent = input("Parent's gate: ")
+                        node_parent.set_gate(gate_parent)
 
-                            node_parent.set_gate(gate_parent)
+                        # On lui supprime ses valeurs
+                        node_parent.clear_values()
 
-                            # On lui supprime ses valeurs
-                            node_parent.clear_values()
-
-                            self.set_node(node_parent)
+                        self.set_node(node_parent)
 
         print("\n*\n")
 
@@ -868,24 +915,9 @@ class Tree:
             gate = input("Logical gate: ")
 
             # L'utilisateur doit ressaisir une porte logique tant qu'elle n'est pas valide
-            while gate not in gates:
+            while not (gate_is_valid(gate, nmb_children)):
                 print("\nError input: the gate '", gate, "' is not valid", sep="")
                 gate = input("Logical gate: ")
-
-            # Erreur si le noeud est muni d'une porte logique et a au moins deux fils
-            if gate == "NOT":
-                if nmb_children >= 2:
-                    print("\nImpossible adding of this node")
-                    print("Logical gate NOT takes only one entry")
-
-                    return node_error
-            # Erreur si le noeud est muni d'une porte logique AND, OR, XOR ou SOR et a exactement un fils
-            else:
-                if nmb_children == 1:
-                    print("\nImpossible adding of this node")
-                    print("Logical gate", gate, "takes at least two entries")
-
-                    return node_error
 
             # Pas de valeurs
             values = []
@@ -932,23 +964,6 @@ class Tree:
 
             return 1
 
-        # Parents du noeud del_node
-        del_node_parents = self.get_node_parents(del_node)
-
-        for node_parent in del_node_parents:
-            children_parent = node_parent.get_children()
-
-            # Erreur si un des parents du noeud del_node est muni d'une porte logique AND, OR, XOR ou SOR
-            if len(children_parent) == 2:
-                name_del_node = del_node.get_name()
-
-                print("\nImpossible deleting of the node ", id, " (", name_del_node, ")", sep="")
-                print("A logical parent's gate takes at least two entries")
-
-                time.sleep(5)
-
-                return 1
-
         print("\n*\n")
 
         print("Delete the sub-tree from this node?")
@@ -957,23 +972,24 @@ class Tree:
 
         # Suppression du noeud et du sous-arbre engendré
         if del_choice == "Y" or del_choice == "y":
-            # Parents du noeud supprimé
             del_node_parents = self.delete_sub_tree_from_node(del_node)
-
-            for del_node_parent in del_node_parents:
-                # Si un parent du noeud supprimé est une feuille, on lui ajoute des valeurs pour chaque paramètre
-                if del_node_parent.is_leaf():
-                    id_del_node_parent = del_node_parent.get_id()
-
-                    print("\nNode", id_del_node_parent, end="\n\n")
-
-                    del_node_parent.set_gate("")
-
-                    add_leaves_values = self.input_values()
-                    self.add_leaves_values(add_leaves_values)
         # Suppression du noeud uniquement
         else:
-            self.delete_node_tree(del_node)
+            del_node_parents = self.delete_node_tree(del_node)
+
+        for del_node_parent in del_node_parents:
+            # Si un parent du noeud supprimé est une feuille, on lui ajoute des valeurs pour chaque paramètre
+            if del_node_parent.is_leaf():
+                id_del_node_parent = del_node_parent.get_id()
+
+                print("\nNode", id_del_node_parent)
+
+                del_node_parent.clear_gate()
+
+                leaves_values = self.input_values()
+                del_node_parent.set_values(leaves_values)
+
+                self.set_node(del_node_parent)
 
         return 0
 
@@ -1074,9 +1090,9 @@ class Tree:
                 gate = input("Logical gate: ")
 
                 # L'utilisateur doit ressaisir une porte logique tant qu'elle n'est pas valide
-                while gate not in gates:
+                while not (gate_is_valid(gate, nmb_children)):
                     print("\nError input: the gate '", gate, "' is not valid", sep="")
-                    gate = input("Parent's gate: ")
+                    gate = input("Logical gate: ")
 
                 # Pas de valeurs
                 values = []
@@ -1124,6 +1140,70 @@ class Tree:
 
         print("SCENARIO\n")
         self.pro.print_optimization()
+
+    """
+    
+    """
+    def find_path(self, node):
+        id = node.get_id()
+
+        if node.is_leaf():
+            return id
+        else:
+            gate = node.get_gate()
+            node_children = self.get_node_children(node)
+
+            if gate == "AND":
+                return [id, [self.find_path(node_child) for node_child in node_children]]
+            else:
+                return [id] + [self.find_path(node_child) for node_child in node_children]
+
+    """
+    
+    """
+    def find_symbolic_expression(self, node, parameter):
+        ind_par = self.pro.get_index_parameter(parameter)
+
+        if node.is_leaf():
+            values = node.get_values()
+            value_par = values[ind_par]
+
+            return str(value_par)
+        else:
+            symb_expr = ""
+
+            gate = node.get_gate()
+            node_children = self.get_node_children(node)
+            rule_gate = self.pro.get_rule_gate_ind(gate, ind_par)
+
+            if gate == "AND":
+                nmb_children = len(node_children)
+
+                if nmb_children >= 3:
+                    for node_child in node_children:
+                        if node_child == node_children[-1]:
+                            symb_expr += self.find_symbolic_expression(node_child, parameter) + ")"
+                        else:
+                            symb_expr += self.find_symbolic_expression(node_child, parameter) + " " + rule_gate + " "
+
+                            if node_child == node_children[0]:
+                                symb_expr = "(" + symb_expr
+                elif nmb_children == 2:
+                    first_node_child = node_children[0]
+                    second_node_child = node_children[1]
+
+                    first_symb_expr = self.find_symbolic_expression(first_node_child, parameter)
+                    second_symb_expr = self.find_symbolic_expression(second_node_child, parameter)
+
+                    symb_expr = "(" + first_symb_expr + " " + rule_gate + " " + second_symb_expr + ")"
+                else:
+                    first_node_child = node_children[0]
+                    symb_expr = rule_gate + " " + self.find_symbolic_expression(first_node_child, parameter)
+
+                return symb_expr
+            else:
+                first_node_child = node_children[0]
+                return self.find_symbolic_expression(first_node_child, parameter)
 
     """
     Entrée : aucune
