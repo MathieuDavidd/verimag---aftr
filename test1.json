@@ -1,0 +1,63 @@
+{
+  "Parameters": [
+    "Time",
+    "Energy"
+  ],
+  "Compute rules": {
+    "AND": [
+      "+",
+      "+"
+    ],
+    "OR": [
+      "M",
+      "m"
+    ],
+    "k/n": [
+      "*",
+      "+"
+    ]
+  },
+  "Optimization rules": [
+    "m",
+    "m"
+  ],
+  "Nodes": [
+    {
+      "ID": 1,
+      "Name": "node1",
+      "Parents": [],
+      "Children": [
+        2,
+        3
+      ],
+      "Gate": "AND",
+      "Values": []
+    },
+    {
+      "ID": 2,
+      "Name": "node2",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        7,
+        "x"
+      ]
+    },
+    {
+      "ID": 3,
+      "Name": "node3",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        "1.5*x",
+        "y"
+      ]
+    }
+  ]
+}
