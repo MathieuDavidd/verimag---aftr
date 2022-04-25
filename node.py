@@ -155,6 +155,15 @@ class Node:
     Entrée : aucune
     Sortie : aucune
     
+    Vide la chaine de caractères contenant la porte logique du noeud
+    """
+    def clear_gate(self):
+        self.gate = ""
+
+    """
+    Entrée : aucune
+    Sortie : aucune
+    
     Vide le tableau de valeurs du noeud
     """
     def clear_values(self):
@@ -279,8 +288,11 @@ class Node:
         else:
             print("  Values: ", end="")
 
-            for values in self.values:
-                print(values, end=" ")
+            for value in self.values:
+                print(value, end="")
+
+                if value != self.values[-1]:
+                    print("; ", end="")
 
             print()
 
