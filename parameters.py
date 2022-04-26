@@ -88,6 +88,10 @@ class Parameters:
     Getter : renvoie la (ind+1)-ième règle de calcul associée à la porte logique gate
     """
     def get_rule_gate_ind(self, gate, ind):
+        # Cas particulier pour la porte logique k/n
+        if "/" in gate:
+            gate = "k/n"
+
         return self.rules[gate][ind]
 
     """
@@ -643,7 +647,7 @@ class Parameters:
     Affichage des règles de calcul associées à la porte logique gate pour tous les paramètres de l'arbre
     """
     def print_rules(self, gate):
-        # Cas particulier pour la porte logique k parmi n
+        # Cas particulier pour la porte logique k/n
         if "/" in gate:
             gate = "k/n"
 
