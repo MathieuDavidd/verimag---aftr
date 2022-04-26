@@ -42,6 +42,7 @@ elif choice == "L" or choice == "l":
 
         sys.exit()
 
+    # Chargement du contenu du fichier JSON pour le convertir en arbre
     t.from_json_to_tree(name_file)
 else:
     clear()
