@@ -1142,68 +1142,110 @@ class Tree:
         self.pro.print_optimization()
 
     """
+    Entrée :
+        node (objet Node) : noeud
+    Sortie : liste de listes d'entiers
     
+    Renvoie tous les chemins du parcours de l'arbre en partant du noeud node
     """
     def find_path(self, node):
+        # Identifiant du noeud node
         id = node.get_id()
-        appel = False
+
+        # Cas terminal : node est une feuille
         if node.is_leaf():
             return [id]
+        # Tout autre type de noeud
         else:
+            # Porte logique du noeud
             gate = node.get_gate()
+            # Fils du noeud
             node_children = self.get_node_children(node)
 
-            if gate == "AND":
-                return [id, [self.find_path(node_child) for node_child in node_children]]
+            # Deux cas : gate est une porte logique AND ou OR
 
+            # Porte logique AND
+            if gate == "AND":
+                # Conservation de tous les fils du noeud : tous les événements associés doivent se réaliser
+                return [id, [self.find_path(node_child) for node_child in node_children]]
+            # Porte logique OR
             else:
+                # Ajout des fils du noeud : au moins un des événements associés doit se réaliser
                 return [id] + [self.find_path(node_child) for node_child in node_children]
 
-
     """
+    Entrée :
+        node (objet Node) : noeud
+        parameter (chaine de caractères) : paramètre de l'arbre
+    Sortie : chaine de caractères
     
+    Renvoie l'expression symbolique pour le chemin du parcours de l'arbre issu du noeud node associé au paramètre
+    parameter
     """
     def find_symbolic_expression(self, node, parameter):
+        # Indice du paramètre parameter
         ind_par = self.pro.get_index_parameter(parameter)
 
+        # Cas terminal : node est une feuille
         if node.is_leaf():
+            # Valeurs du noeud node
             values = node.get_values()
+            # Valeur associée au paramètre parameter
             value_par = values[ind_par]
 
             return str(value_par)
         else:
             symb_expr = ""
 
+            # Porte logique du noeud
             gate = node.get_gate()
+            # Fils du noeud
             node_children = self.get_node_children(node)
+            # Règle de calcul associée à la porte logique gate pour le paramètre parameter
             rule_gate = self.pro.get_rule_gate_ind(gate, ind_par)
 
+            # Deux cas : gate est une porte logique AND ou OR
+
+            # Porte logique AND
             if gate == "AND":
+                # Nombre de fils
                 nmb_children = len(node_children)
 
+                # Au moins trois fils
                 if nmb_children >= 3:
                     for node_child in node_children:
+                        # node_child est le dernier fils
                         if node_child == node_children[-1]:
                             symb_expr += self.find_symbolic_expression(node_child, parameter) + ")"
+                        # Tout autre fils
                         else:
                             symb_expr += self.find_symbolic_expression(node_child, parameter) + " " + rule_gate + " "
 
                             if node_child == node_children[0]:
                                 symb_expr = "(" + symb_expr
+                # Deux fils
                 elif nmb_children == 2:
+                    # Premier fils
                     first_node_child = node_children[0]
+                    # Second fils
                     second_node_child = node_children[1]
 
+                    # Expression symbolique pour le premier fils
                     first_symb_expr = self.find_symbolic_expression(first_node_child, parameter)
+                    # Expression symbolique pour le second fils
                     second_symb_expr = self.find_symbolic_expression(second_node_child, parameter)
 
                     symb_expr = "(" + first_symb_expr + " " + rule_gate + " " + second_symb_expr + ")"
+                # Un seul fils
                 else:
+                    # Seul et unique fils
                     first_node_child = node_children[0]
                     symb_expr = rule_gate + " " + self.find_symbolic_expression(first_node_child, parameter)
 
                 return symb_expr
+            # Porte logique OR
             else:
+                # Premier fils
                 first_node_child = node_children[0]
                 return self.find_symbolic_expression(first_node_child, parameter)
 
