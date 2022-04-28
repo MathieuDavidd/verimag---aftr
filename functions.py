@@ -18,7 +18,12 @@ Efface le terminal
 clear = lambda: os.system('cls' if os.name in ('nt', 'dos') else 'clear')
 
 """
+Entrée :
+    list1 (liste de type générique)
+    list2 (liste de type générique)
+Sortie : liste de type générique
 
+Applique la différence d_list = list1\list2
 """
 def private_from(list1, list2):
     rev_list = []
@@ -59,7 +64,11 @@ def generic_type_input(message, type_input):
         return user_input
 
 """
+Entrée :
+    gate (chaine de caractères) : porte logique
+Sortie : tuple
 
+Renvoie le couple (k, n) où k et n sont les éléments de la porte logique gate := k/n
 """
 def get_elements_gate_comb(gate):
     elements_split = gate.split("/")
@@ -158,7 +167,12 @@ def set_gate_comb(gate, set_n):
     return gate
 
 """
+Entrée :
+    list (liste de chaines de caractères)
+    k (chaines de caractères)
+Sortie : liste de chaines de caractères
 
+Renvoie l'ensemble des combinaisons possibles de k parmi n
 """
 def list_gate_comb(list, k):
     lgc = []
@@ -182,3 +196,20 @@ def list_gate_comb(list, k):
         i += 1
 
     return lgc
+
+"""
+Entrée :
+    symb_expr (chaine de caractères) : expression symbolique
+Sortie : liste de chaines de caractères
+
+Renvoie la liste des variables se trouvant dans l'expression symbolique symb_expr
+"""
+def all_var_in_expr(symb_expr):
+    str_expr = str(symb_expr)
+    variables = []
+
+    for char in str_expr:
+        if 97 <= ord(char) <= 122:
+            variables.append(char)
+
+    return variables
