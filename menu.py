@@ -2,13 +2,15 @@
 Fichier menu.py
 
 Classe Menu : menu
-Modifications de l'arbre
+Modifications de l'arbre et calculs de scénarios
 """
 
 
 import sys
 import time
-from functions import clear
+import sympy as sy
+from functions import clear, all_var_in_expr
+from DataFrame import sort_dataframe_menu
 from node import Node
 from tree import Tree
 
@@ -51,20 +53,13 @@ class Menu:
 
         # Choix : ajout d'un paramètre à l'arbre
         if action == "A" or action == "a":
-            # Erreur si l'arbre contient déjà tous les paramètres possibles
-            if len(parameters) == 4:
-                print("\nImpossible to add a parameter")
-                time.sleep(2)
-
-                return 1
-
             print("\n*\n")
 
             # Saisie du paramètre à ajouter
             add_par = input("Enter the parameter you want to add: ")
 
-            # CNS pour la génération d'erreur : le paramètre n'est pas valide ou existe déjà
-            if not (pro.parameter_is_valid(add_par)) or pro.parameter_exists(add_par):
+            # CS pour la génération d'erreur : le paramètre existe
+            if pro.parameter_exists(add_par):
                 print("\nThe parameter '", add_par, "' cannot be added", sep="")
                 time.sleep(2)
 
@@ -97,7 +92,7 @@ class Menu:
             # Saisie du paramètre à supprimer
             del_par = input("Enter the parameter you want to delete: ")
 
-            # CN pour la génération d'erreur : le paramètre n'existe pas
+            # CS pour la génération d'erreur : le paramètre n'existe pas
             if not (pro.parameter_exists(del_par)):
                 print("\nThe parameter '", del_par, "' does not exist", sep="")
                 time.sleep(2)
@@ -202,9 +197,8 @@ class Menu:
         # Choix : suppression d'un noeud de l'arbre
         elif action == "D" or action == "d":
             print("\nDelete a node")
-            print("  Two deletion modes")
-            print("    Removal of the node only")
-            print("               the node and the generated sub-tree\n")
+            print("  Removal of the node only")
+            print("             the node and the generated sub-tree\n")
 
             ret = self.tree.input_delete_node()
 
@@ -219,9 +213,92 @@ class Menu:
 
     """
     Entrée : aucune
+    Sortie : 
+    
+    Parcours de l'arbre et affichage des chemins et valeurs calculées
+    Renvoie :
+        - 0 ssi tout s'est bien déroulé
+        - 1 sinon
+    """
+    def action_data(self):
+        print("\n*\n")
+
+        pro = self.tree.get_pro()
+        # Paramètres de l'arbre
+        parameters = pro.get_parameters()
+
+        # Données de l'arbre
+        (paths, expr_dev, expr_simpl) = self.tree.data_tree(parameters)
+
+        # Nombre de chemins
+        nmb_paths = len(paths)
+
+        if nmb_paths == 1:
+            print(nmb_paths, "chemin\n")
+        else:
+            print(nmb_paths, "chemins\n")
+
+        print("Paramètres")
+        pro.print_parameters()
+
+        print("\n\n~\n")
+
+        # Affichage des chemins et des expressions symboliques associées à chaque paramètre de l'arbre
+        for i in range(nmb_paths):
+            print(i + 1, ": ", sep="", end="")
+
+            # Chemin de l'arbre
+            path = paths[i]
+            print(path)
+
+            for j in range(len(parameters)):
+                parameter = parameters[j]
+                print("  ", parameter, ": ", sep="", end="")
+
+                # Expressions symboliques du chemin sous forme développée
+                dev_path = expr_dev[i]
+                # Expressions symboliques du chemin sous forme simplifiée
+                simpl_path = expr_simpl[i]
+
+                # Expression symbolique développée associée au paramètre
+                dev_par = dev_path[j]
+                # Expression symbolique simplifiée associée au paramètre
+                simpl_par = simpl_path[j]
+
+                # Affichage de l'expression symbolique
+
+                print(dev_par, " = ", sep="", end="")
+                print(simpl_par)
+
+                # Évaluation des variables, s'il en existe
+
+                (variables, evaluations) = self.tree.input_evaluation_variables(simpl_par)
+
+                eval_var = ""
+
+                for k in range(len(variables)):
+                    variable = variables[k]
+                    evaluation = evaluations[k]
+
+                    var = sy.symbols(variable)
+                    eval_var = simpl_par.subs(var, evaluation)
+
+                    simpl_path[j] = eval_var
+                    expr_simpl[i] = simpl_path
+
+                if eval_var != "":
+                    print("    => ", simpl_par, " = ", eval_var, sep="", end="\n")
+
+            print()
+
+        # Manipulation du dataframe
+        sort_dataframe_menu(self.tree, paths, expr_simpl)
+
+    """
+    Entrée : aucune
     Sortie : entier
     
-    Exécution d'une action sur un paramètre ou un noeud de l'arbre
+    Exécution d'une action
     Renvoie :
         - 0 ssi tout s'est bien déroulé
         - 1 ssi il y a une erreur
@@ -235,10 +312,11 @@ class Menu:
 
         print("~\n")
 
-        print("Actions: adding, deleting or modifying\n")
+        print("Action\n")
 
         print("Parameter: enter P or p")
-        print("Node: type N or n\n")
+        print("Node: type N or n")
+        print("Data: type D or d\n")
 
         print("~\n")
 
@@ -251,6 +329,9 @@ class Menu:
         # Action sur un noeud
         elif choice == "N" or choice == "n":
             ret = self.action_node()
+        # Parcours de l'arbre
+        elif choice == "D" or choice == "d":
+            ret = self.action_data()
         # L'utilisateur quitte le menu
         elif choice == "Q" or choice == "q":
             return 2
@@ -286,10 +367,8 @@ class Menu:
 
             # Ajout de l'extension .json si elle a été oubliée
             if ".json" not in name_file:
-                name_file = name_file + ".json"
+                name_file += ".json"
 
             self.tree.from_tree_to_json(name_file)
 
         clear()
-
-        sys.exit()
