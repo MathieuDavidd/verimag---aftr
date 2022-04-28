@@ -9,7 +9,7 @@ des scénarios
 
 
 import sys
-from functions import rule_is_valid, optimization_is_valid
+from functions import gates, rule_is_valid, optimization_is_valid
 
 
 class Parameters:
