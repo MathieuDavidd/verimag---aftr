@@ -1,0 +1,91 @@
+{
+  "Parameters": [
+    "Time",
+    "Money"
+  ],
+  "Compute rules": {
+    "AND": [
+      "+",
+      "+"
+    ],
+    "OR": [
+      "M",
+      "m"
+    ],
+    "k/n": [
+      "+",
+      "+"
+    ]
+  },
+  "Optimization rules": [
+    "m",
+    "m"
+  ],
+  "Nodes": [
+    {
+      "ID": 1,
+      "Name": "node1",
+      "Parents": [],
+      "Children": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "Gate": "3/4",
+      "Values": []
+    },
+    {
+      "ID": 2,
+      "Name": "node2",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        1,
+        8
+      ]
+    },
+    {
+      "ID": 3,
+      "Name": "node3",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        "t",
+        3
+      ]
+    },
+    {
+      "ID": 4,
+      "Name": "node4",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        2,
+        15
+      ]
+    },
+    {
+      "ID": 5,
+      "Name": "node5",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        5,
+        "m"
+      ]
+    }
+  ]
+}
