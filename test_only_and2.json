@@ -1,0 +1,103 @@
+{
+  "Parameters": [
+    "Time",
+    "Success probability"
+  ],
+  "Compute rules": {
+    "AND": [
+      "+",
+      "*"
+    ],
+    "OR": [
+      "M",
+      "M"
+    ],
+    "k/n": [
+      "+",
+      "*"
+    ]
+  },
+  "Optimization rules": [
+    "m",
+    "M"
+  ],
+  "Nodes": [
+    {
+      "ID": 1,
+      "Name": "node1",
+      "Parents": [],
+      "Children": [
+        2,
+        3
+      ],
+      "Gate": "AND",
+      "Values": []
+    },
+    {
+      "ID": 2,
+      "Name": "node2",
+      "Parents": [
+        1
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        5,
+        15
+      ]
+    },
+    {
+      "ID": 3,
+      "Name": "node3",
+      "Parents": [
+        1
+      ],
+      "Children": [
+        4,
+        5,
+        6
+      ],
+      "Gate": "AND",
+      "Values": []
+    },
+    {
+      "ID": 4,
+      "Name": "node4",
+      "Parents": [
+        3
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        1,
+        27
+      ]
+    },
+    {
+      "ID": 5,
+      "Name": "node5",
+      "Parents": [
+        3
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        4,
+        1
+      ]
+    },
+    {
+      "ID": 6,
+      "Name": "node6",
+      "Parents": [
+        3
+      ],
+      "Children": [],
+      "Gate": "",
+      "Values": [
+        6,
+        2
+      ]
+    }
+  ]
+}
