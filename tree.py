@@ -10,8 +10,9 @@ d'optimisation
 
 import copy
 import time
+import sympy as sy
 import json
-from functions import clear, generic_type_input, gate_is_valid, set_gate_comb
+from functions import *
 from node import Node
 from parameters import Parameters
 
@@ -252,9 +253,10 @@ class Tree:
 
         # Parcours des fils du noeud courant
         for node_child in node_children:
-            # Petit-fils du noeud courant
-            node_children_child = self.get_node_children(node_child)
-            node_grand_children.extend(node_children_child)
+            if node_child != None:
+                # Petit-fils du noeud courant
+                node_children_child = self.get_node_children(node_child)
+                node_grand_children.extend(node_children_child)
 
         return node_grand_children
 
@@ -1248,6 +1250,189 @@ class Tree:
                 # Premier fils
                 first_node_child = node_children[0]
                 return self.find_symbolic_expression(first_node_child, parameter)
+
+    """
+    Entrée :
+        id (entier) : identifiant d'un noeud
+    Sortie : liste d'objets Tree
+
+    Reformate l'arbre en renvoyant la liste des sous-arbres en supprimant les fils du noeud node ssi il est muni
+    d'une porte logique OR ou k/n
+    """
+    def formatting_tree(self, id):
+        split_formatting = []
+
+        # Noeud d'identifiant id
+        node = self.get_node(id)
+        # Porte logique du noeud
+        gate = node.get_gate()
+        # Identifiants des fils du noeud
+        children = node.get_children()
+
+        # gate est une porte logique k/n
+        if "/" in gate:
+            # Noeud ayant n fils et muni d'une porte logique k/n = Noeud ayant k fils et muni d'une porte logique AND
+            node.set_gate("AND")
+
+            (str_k, str_n) = get_elements_gate_comb(gate)
+            k = int(str_k)
+
+            # Copie profonde de la liste children
+            tmp_children = copy.deepcopy(children)
+
+            #
+            lgc = list_gate_comb(tmp_children, k)
+
+            # Inversion des permutations
+            for i in range(len(lgc)):
+                diff_list = private_from(tmp_children, lgc[i])
+                lgc[i] = diff_list
+
+            # Formatage de l'arbre
+            for list in lgc:
+                # Copie profonde de l'arbre
+                tmp_tree = self.deepcopy()
+
+                # Suprression des noeuds fils et des sous-arbres engendrés
+                for id_child in list:
+                    node_child = tmp_tree.get_node(id_child)
+                    tmp_tree.delete_sub_tree_from_node(node_child)
+
+                split_formatting.append(tmp_tree)
+        # gate est une porte logique OR
+        else:
+            # Copie profonde de la liste children
+            tmp_children = copy.deepcopy(children)
+
+            # Formatage de l'arbre
+            for id_child in tmp_children:
+                # Copie profonde de l'arbre
+                tmp_tree = self.deepcopy()
+
+                # Suprression des noeuds fils et des sous-arbres engendrés
+                for tmp_id_child in tmp_children:
+                    if tmp_id_child != id_child:
+                        node_child = tmp_tree.get_node(tmp_id_child)
+                        tmp_tree.delete_sub_tree_from_node(node_child)
+
+                split_formatting.append(tmp_tree)
+
+        return split_formatting
+
+    """
+    Entrée : aucune
+    Sortie : liste d'objets Tree
+
+    Parcourt l'arbre et renvoie la liste des sous-arbres issus du formatage effectué lors d'un appel de la
+    fonction formatting_tree
+    """
+    def pathway_tree(self):
+        nodes = self.get_nodes()
+        id_nodes_formatting = []
+
+        # Stockage des noeuds munis d'une porte logique OR ou k/n dans la liste id_nodes_formatting
+        for node in nodes:
+            gate = node.get_gate()
+
+            if not (node.is_leaf()) and gate != "AND":
+                id = node.get_id()
+                id_nodes_formatting.append(id)
+
+        list_tree = [self]
+
+        # Création des sous-arbres issus du formatage de l'arbre
+        for id_node in id_nodes_formatting:
+            tmp = copy.deepcopy(list_tree)
+
+            for tmp_tree in tmp:
+                if tmp_tree.node_exists(id_node):
+                    list_split_tree = tmp_tree.formatting_tree(id_node)
+
+                    list_tree += list_split_tree
+                    list_tree.pop(0)
+
+        return list_tree
+
+    """
+    Entrée :aucune
+    Sortie : liste de liste d'objets Tree
+
+    Renvoie tous les chemins possibles de l'arbre
+    """
+    def paths_tree(self):
+        # Sous-arbres par formatage de l'arbre
+        pathway = self.pathway_tree()
+        list_paths = []
+
+        # Parcours de chaque sous-arbre en partant de la racine et stockage du chemin dans la liste list_paths
+        for pw in pathway:
+            root = pw.get_root()
+            paths = pw.find_path(root)
+
+            list_paths.append(paths)
+
+        return list_paths
+
+    """
+    Entrée :
+        parameters (liste de chaines de caractères) : paramètres de l'arbre
+    Sortie : tuple
+
+    Renvoie le 3-uplet de listes (chemins, expressions symboliques développées, expressions symboliques simplifiées)
+    """
+    def data_tree(self, parameters):
+        # Sous-arbres par formatage de l'arbre
+        pathway = self.pathway_tree()
+
+        all_paths = []
+        all_dev = []
+        all_simp = []
+
+        for pw in pathway:
+            root = pw.get_root()
+
+            # Chemins du sous-arbre en partant de la racine
+            paths = pw.find_path(root)
+            all_paths.append(paths)
+
+            list_dev = []
+            list_simpl = []
+
+            for parameter in parameters:
+                # Expression symbolique du sous-arbre pour le paramètre parameter
+                symb_expr = pw.find_symbolic_expression(root, parameter)
+                list_dev.append(symb_expr)
+
+                # Simplification
+                simpl = sy.sympify(symb_expr)
+                list_simpl.append(simpl)
+
+            all_dev.append(list_dev)
+            all_simp.append(list_simpl)
+
+        return (all_paths, all_dev, all_simp)
+
+    """
+
+    """
+    def input_evaluation_variables(self, symb_expr):
+        variables = all_var_in_expr(symb_expr)
+        evaluations = []
+
+        for variable in variables:
+            print("    ", end="")
+
+            inp_str = variable + " := "
+            eval_var = generic_type_input(inp_str, int)
+
+            while eval_var == "\0":
+                print("\nError input: '", eval_var, "' is not a valid evaluation (enter an integer)")
+                eval_var = generic_type_input(inp_str, float)
+
+            str_eval = str(eval_var)
+            evaluations.append(eval_var)
+
+        return (variables, evaluations)
 
     """
     Entrée : aucune
